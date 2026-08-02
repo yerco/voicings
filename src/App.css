@@ -22,6 +22,12 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.mode-switch {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
 h1 {
   font-size: 1.3rem;
   font-weight: 700;
@@ -144,6 +150,14 @@ input[type="number"] {
   font-size: 0.8rem;
   font-weight: 400;
   color: #78716c;
+}
+
+.fret-card-wide {
+  background: #fafaf9;
+  border: 1px solid #d6d3d1;
+  border-radius: 8px;
+  padding: 0.6rem 0.6rem 0.4rem;
+  overflow-x: auto;
 }
 
 .fret-card {

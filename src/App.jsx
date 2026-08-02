@@ -3,9 +3,13 @@ import {
   NOTE_NAMES_SHARP,
   NOTE_NAMES_FLAT,
   QUALITIES,
+  QUALITY_SCALES,
+  SCALES,
   OPEN_PC,
   mod12,
   buildToneMap,
+  buildScaleToneMap,
+  fullNeckRootCombo,
   GENERIC_INTERVAL,
 } from "./engine/theory.js";
 import { ALL_STRINGS, findVoicingsAllGroups } from "./engine/search.js";
@@ -14,6 +18,7 @@ import { STRINGS, formatInversion, qualityLabel } from "./i18n.js";
 
 export default function App() {
   const [lang, setLang] = useState("es");
+  const [mode, setMode] = useState("voicings"); // "voicings" | "explore"
   const [root, setRoot] = useState(7); // G
   const [quality, setQuality] = useState("m6");
   const [extState, setExtState] = useState({}); // deg -> "on" | "required"
@@ -24,6 +29,8 @@ export default function App() {
   const [windowRadius, setWindowRadius] = useState(4);
   const [useFlats, setUseFlats] = useState(true);
   const [includeFullChords, setIncludeFullChords] = useState(false);
+  const [exploreType, setExploreType] = useState("arpeggio"); // "arpeggio" | "scale"
+  const [scaleKey, setScaleKey] = useState(null);
 
   const t = STRINGS[lang];
   const noteNames = useFlats ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
@@ -64,6 +71,12 @@ export default function App() {
 
   const chordSymbol = noteNames[root] + q.label;
 
+  const scaleOptions = QUALITY_SCALES[quality] ?? [];
+  const effectiveScaleKey = scaleOptions.includes(scaleKey) ? scaleKey : scaleOptions[0];
+  const exploreToneMap = exploreType === "scale" ? buildScaleToneMap(effectiveScaleKey) : toneMap;
+  const exploreLabel = exploreType === "scale" ? SCALES[effectiveScaleKey].label : t.exploreTypeArpeggio;
+  const rootCombo = useMemo(() => fullNeckRootCombo(root, 0, 12), [root]);
+
   // click cicla: apagado -> permitida -> exigida -> apagado
   const toggleExt = (deg) =>
     setExtState((prev) => {
@@ -89,6 +102,15 @@ export default function App() {
         <h1>{t.title}</h1>
         <p className="subtitle">{t.subtitle}</p>
 
+        <div className="mode-switch">
+          <button className={"chip " + (mode === "voicings" ? "chip--active" : "")} onClick={() => setMode("voicings")}>
+            {t.modeVoicings}
+          </button>
+          <button className={"chip " + (mode === "explore" ? "chip--active" : "")} onClick={() => setMode("explore")}>
+            {t.modeExplore}
+          </button>
+        </div>
+
         <div className="panel">
           <div className="row">
             <label>
@@ -107,14 +129,16 @@ export default function App() {
               {t.useFlats}
             </label>
 
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={includeFullChords}
-                onChange={(e) => setIncludeFullChords(e.target.checked)}
-              />
-              {t.includeFullChords}
-            </label>
+            {mode === "voicings" && (
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={includeFullChords}
+                  onChange={(e) => setIncludeFullChords(e.target.checked)}
+                />
+                {t.includeFullChords}
+              </label>
+            )}
 
             <label>
               {t.quality}{" "}
@@ -134,9 +158,9 @@ export default function App() {
             </label>
           </div>
 
-          {Object.keys(q.ext).length > 0 && (
+          {Object.keys(q.ext).length > 0 && (mode === "voicings" || exploreType === "arpeggio") && (
             <div className="row">
-              <span className="hint">{t.tensionsHint}</span>
+              <span className="hint">{mode === "voicings" ? t.tensionsHint : t.tensionsHintExplore}</span>
               {Object.keys(q.ext).map((deg) => (
                 <button
                   key={deg}
@@ -153,98 +177,148 @@ export default function App() {
             </div>
           )}
 
-          <div className="row row--border">
-            <label className="toggle">
-              <input type="checkbox" checked={pinOn} onChange={(e) => setPinOn(e.target.checked)} />
-              {t.pinMelody}
-            </label>
-            {pinOn && (
-              <>
+          {mode === "voicings" ? (
+            <div className="row row--border">
+              <label className="toggle">
+                <input type="checkbox" checked={pinOn} onChange={(e) => setPinOn(e.target.checked)} />
+                {t.pinMelody}
+              </label>
+              {pinOn && (
+                <>
+                  <label>
+                    {t.string}{" "}
+                    <select value={pinString} onChange={(e) => setPinString(Number(e.target.value))}>
+                      {ALL_STRINGS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t.fret}{" "}
+                    <input
+                      type="number"
+                      min={0}
+                      max={15}
+                      value={pinFret}
+                      onChange={(e) => setPinFret(Number(e.target.value))}
+                    />
+                  </label>
+                  <label>
+                    {t.windowRadius}{" "}
+                    <input
+                      type="number"
+                      min={1}
+                      max={8}
+                      value={windowRadius}
+                      onChange={(e) => setWindowRadius(Number(e.target.value))}
+                    />
+                    <span className="hint"> {t.frets}</span>
+                  </label>
+                  {melodyDegree && (
+                    <span className="hint hint--mono">
+                      → {melodyDegree.note} = {melodyDegree.degree}
+                    </span>
+                  )}
+                </>
+              )}
+              {!pinOn && (
                 <label>
-                  {t.string}{" "}
-                  <select value={pinString} onChange={(e) => setPinString(Number(e.target.value))}>
-                    {ALL_STRINGS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
+                  {t.basePosition}{" "}
+                  <input
+                    type="number"
+                    min={0}
+                    max={12}
+                    value={baseFret}
+                    onChange={(e) => setBaseFret(Number(e.target.value))}
+                  />
+                </label>
+              )}
+            </div>
+          ) : (
+            <div className="row row--border">
+              <span className="hint">{t.exploreType}</span>
+              <button
+                className={"chip " + (exploreType === "arpeggio" ? "chip--active" : "")}
+                onClick={() => setExploreType("arpeggio")}
+              >
+                {t.exploreTypeArpeggio}
+              </button>
+              <button
+                className={"chip " + (exploreType === "scale" ? "chip--active" : "")}
+                onClick={() => setExploreType("scale")}
+              >
+                {t.exploreTypeScale}
+              </button>
+              {exploreType === "scale" && (
+                <label>
+                  {t.scaleLabel}{" "}
+                  <select value={effectiveScaleKey} onChange={(e) => setScaleKey(e.target.value)}>
+                    {scaleOptions.map((key) => (
+                      <option key={key} value={key}>
+                        {SCALES[key].label}
                       </option>
                     ))}
                   </select>
                 </label>
-                <label>
-                  {t.fret}{" "}
-                  <input
-                    type="number"
-                    min={0}
-                    max={15}
-                    value={pinFret}
-                    onChange={(e) => setPinFret(Number(e.target.value))}
-                  />
-                </label>
-                <label>
-                  {t.windowRadius}{" "}
-                  <input
-                    type="number"
-                    min={1}
-                    max={8}
-                    value={windowRadius}
-                    onChange={(e) => setWindowRadius(Number(e.target.value))}
-                  />
-                  <span className="hint"> {t.frets}</span>
-                </label>
-                {melodyDegree && (
-                  <span className="hint hint--mono">
-                    → {melodyDegree.note} = {melodyDegree.degree}
-                  </span>
-                )}
-              </>
-            )}
-            {!pinOn && (
-              <label>
-                {t.basePosition}{" "}
-                <input
-                  type="number"
-                  min={0}
-                  max={12}
-                  value={baseFret}
-                  onChange={(e) => setBaseFret(Number(e.target.value))}
-                />
-              </label>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {results.length === 0 ? (
-          <div className="empty">{t.empty}</div>
+        {mode === "voicings" ? (
+          results.length === 0 ? (
+            <div className="empty">{t.empty}</div>
+          ) : (
+            <>
+              <h2 className="results-title">
+                {chordSymbol}
+                {melodyDegree && (
+                  <span className="results-title-sub">
+                    {" "}
+                    — {t.targetMelody}: {melodyDegree.note} ({melodyDegree.degree})
+                  </span>
+                )}
+              </h2>
+              <div className="results-grid">
+                {results.map((r, i) => (
+                  <FretboardCard
+                    key={r.key}
+                    title={`#${i + 1} · ${formatInversion(r.inversion, t)}`}
+                    rootPc={root}
+                    toneMap={toneMap}
+                    combo={r.combo}
+                    activeStrings={r.strings}
+                    pin={pin}
+                    fretMin={window_.min}
+                    fretMax={window_.max}
+                  />
+                ))}
+              </div>
+            </>
+          )
         ) : (
           <>
             <h2 className="results-title">
               {chordSymbol}
-              {melodyDegree && (
-                <span className="results-title-sub">
-                  {" "}
-                  — {t.targetMelody}: {melodyDegree.note} ({melodyDegree.degree})
-                </span>
-              )}
+              <span className="results-title-sub"> — {exploreLabel}</span>
             </h2>
-            <div className="results-grid">
-              {results.map((r, i) => (
-                <FretboardCard
-                  key={r.key}
-                  title={`#${i + 1} · ${formatInversion(r.inversion, t)}`}
-                  rootPc={root}
-                  toneMap={toneMap}
-                  combo={r.combo}
-                  activeStrings={r.strings}
-                  pin={pin}
-                  fretMin={window_.min}
-                  fretMax={window_.max}
-                />
-              ))}
+            <div className="fret-card-wide">
+              <FretboardCard
+                rootPc={root}
+                toneMap={exploreToneMap}
+                combo={rootCombo}
+                activeStrings={ALL_STRINGS}
+                pin={null}
+                fretMin={0}
+                fretMax={12}
+              />
             </div>
           </>
         )}
 
-        <p className="footnote">{t.footnote}</p>
+        <p className="footnote">{mode === "voicings" ? t.footnote : t.exploreFootnote}</p>
       </div>
     </div>
   );

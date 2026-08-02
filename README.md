@@ -34,6 +34,11 @@ melody lives on a solo guitar arrangement.
 - **Guitar-neck style diagrams**: every card is rendered as a 6-string
   fretboard (muted strings marked ×), fret markers, and three note colors —
   available catalog tones, the chosen voicing, and the pinned melody note.
+- **Scales & arpeggios explorer**: a second mode (separate from the voicing
+  finder) that lays out a chord's arpeggio or a scale over the whole neck
+  (frets 0-12) for the selected root/quality. Scale choices are auto-suggested
+  per chord quality (e.g. m7 → Dorian/Aeolian/Phrygian) from a fixed table of
+  modes, pentatonics, and jazz minor modes (altered, lydian dominant, etc.).
 - **Bilingual UI** (ES/EN toggle).
 
 ## Project structure
@@ -41,7 +46,8 @@ melody lives on a solo guitar arrangement.
 ```
 src/
   engine/
-    theory.js   — note names, chord quality table, string tuning data
+    theory.js   — note names, chord quality table, scale table, string tuning
+                  data
     search.js   — pure search functions (no UI/state): candidate generation,
                   string-group enumeration, ranking
   i18n.js       — ES/EN string dictionaries + formatters for engine output
@@ -115,6 +121,12 @@ agudas, porque ahí vive la melodía en un arreglo de guitarra sola.
   mástil de 6 cuerdas (las mudas marcadas con ×), marcadores de traste, y
   tres colores de nota — tonos del catálogo disponible, la voicing elegida,
   y la nota de melodía fijada.
+- **Explorador de escalas y arpegios**: un segundo modo (separado del
+  buscador de voicings) que dibuja el arpegio del acorde o una escala sobre
+  todo el mástil (trastes 0-12) para la fundamental/calidad elegidas. Las
+  escalas sugeridas se auto-completan según la calidad del acorde (ej. m7 →
+  Dorian/Aeolian/Phrygian) desde una tabla fija de modos, pentatónicas y
+  modos de la menor melódica (alterada, lydian dominant, etc.).
 - **Interfaz bilingüe** (toggle ES/EN).
 
 ## Estructura del proyecto
@@ -122,7 +134,8 @@ agudas, porque ahí vive la melodía en un arreglo de guitarra sola.
 ```
 src/
   engine/
-    theory.js   — nombres de nota, tabla de calidades de acorde, afinación
+    theory.js   — nombres de nota, tabla de calidades de acorde, tabla de
+                  escalas, afinación
     search.js   — funciones puras de búsqueda (sin UI/estado): generación
                   de candidatos, enumeración de grupos de cuerdas, ranking
   i18n.js       — diccionarios ES/EN + funciones de formato para lo que

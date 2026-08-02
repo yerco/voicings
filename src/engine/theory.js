@@ -144,3 +144,72 @@ export function buildToneMap(quality, activeExt) {
   });
   return map;
 }
+
+// Escalas usadas para el modo "explorar" (arpegio/escala sobre todo el mástil).
+// Cada entrada es un mapa grado -> semitono, igual formato que QUALITIES.base,
+// para poder reusar buildScaleToneMap / FretboardCard sin cambios.
+export const SCALES = {
+  ionian: { label: "Ionian (Major)", degrees: { R: 0, "2": 2, "3": 4, "4": 5, "5": 7, "6": 9, "7": 11 } },
+  dorian: { label: "Dorian", degrees: { R: 0, "2": 2, b3: 3, "4": 5, "5": 7, "6": 9, b7: 10 } },
+  phrygian: { label: "Phrygian", degrees: { R: 0, b2: 1, b3: 3, "4": 5, "5": 7, b6: 8, b7: 10 } },
+  lydian: { label: "Lydian", degrees: { R: 0, "2": 2, "3": 4, "#4": 6, "5": 7, "6": 9, "7": 11 } },
+  mixolydian: { label: "Mixolydian", degrees: { R: 0, "2": 2, "3": 4, "4": 5, "5": 7, "6": 9, b7: 10 } },
+  aeolian: { label: "Aeolian (Nat. minor)", degrees: { R: 0, "2": 2, b3: 3, "4": 5, "5": 7, b6: 8, b7: 10 } },
+  locrian: { label: "Locrian", degrees: { R: 0, b2: 1, b3: 3, "4": 5, b5: 6, b6: 8, b7: 10 } },
+  majorPentatonic: { label: "Major pentatonic", degrees: { R: 0, "2": 2, "3": 4, "5": 7, "6": 9 } },
+  minorPentatonic: { label: "Minor pentatonic", degrees: { R: 0, b3: 3, "4": 5, "5": 7, b7: 10 } },
+  blues: { label: "Blues", degrees: { R: 0, b3: 3, "4": 5, b5: 6, "5": 7, b7: 10 } },
+  harmonicMinor: { label: "Harmonic minor", degrees: { R: 0, "2": 2, b3: 3, "4": 5, "5": 7, b6: 8, "7": 11 } },
+  melodicMinor: { label: "Melodic minor", degrees: { R: 0, "2": 2, b3: 3, "4": 5, "5": 7, "6": 9, "7": 11 } },
+  lydianDominant: { label: "Lydian dominant", degrees: { R: 0, "2": 2, "3": 4, "#4": 6, "5": 7, "6": 9, b7: 10 } },
+  altered: { label: "Altered", degrees: { R: 0, b9: 1, "#9": 3, "3": 4, "#11": 6, b13: 8, b7: 10 } },
+  halfWholeDim: {
+    label: "Half-whole diminished",
+    degrees: { R: 0, b9: 1, "#9": 3, "3": 4, "#11": 6, "5": 7, "6": 9, b7: 10 },
+  },
+  wholeHalfDim: {
+    label: "Whole-half diminished",
+    degrees: { R: 0, "2": 2, b3: 3, "4": 5, b5: 6, b6: 8, "6": 9, "7": 11 },
+  },
+  wholeTone: { label: "Whole tone", degrees: { R: 0, "2": 2, "3": 4, "#4": 6, "#5": 8, b7: 10 } },
+};
+
+// calidad de acorde -> lista de escalas sugeridas (la primera es la sugerencia por defecto)
+export const QUALITY_SCALES = {
+  maj7: ["ionian", "lydian"],
+  m7: ["dorian", "aeolian", "phrygian"],
+  "7": ["mixolydian", "lydianDominant", "halfWholeDim"],
+  "7alt": ["altered"],
+  "7sus4": ["mixolydian"],
+  m7b5: ["locrian"],
+  dim7: ["wholeHalfDim"],
+  m6: ["dorian", "melodicMinor"],
+  m6_9: ["dorian", "melodicMinor"],
+  maj: ["ionian", "majorPentatonic", "lydian"],
+  min: ["aeolian", "dorian", "minorPentatonic"],
+  sus2: ["mixolydian", "majorPentatonic"],
+  sus4: ["mixolydian"],
+  aug: ["wholeTone"],
+  dim: ["wholeHalfDim"],
+};
+
+export function buildScaleToneMap(scaleKey) {
+  const map = {}; // semitono -> grado
+  Object.entries(SCALES[scaleKey].degrees).forEach(([deg, st]) => (map[st] = deg));
+  return map;
+}
+
+// resalta, para cada cuerda, el traste donde suena la fundamental dentro del rango dado —
+// reemplaza al "combo" de una voicing puntual cuando se muestra el mástil completo.
+export function fullNeckRootCombo(rootPc, fretMin, fretMax) {
+  const combo = {};
+  [1, 2, 3, 4, 5, 6].forEach((s) => {
+    for (let f = fretMin; f <= fretMax; f++) {
+      if (mod12(OPEN_PC[s] + f) === rootPc) {
+        combo[s] = { fret: f, degree: "R" };
+        break;
+      }
+    }
+  });
+  return combo;
+}

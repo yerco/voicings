@@ -27,6 +27,15 @@ export const STRINGS = {
     tensions: "tensiones",
     footnote:
       "Círculo oscuro = tono del acorde/tensión activa · círculo dorado = tu nota de melodía fijada · círculo gris = nota fuera del catálogo pero presente porque la fijaste vos. El motor prueba todos los grupos de 3-4 cuerdas razonables (adyacentes y con salto, tipo drop 2/drop 3) con la melodía en la cuerda más aguda del grupo, y ordena por menor apertura de trastes, luego más tensiones activas presentes (★ = exigida), luego más tonos distintos cubiertos.",
+    modeVoicings: "Voicings",
+    modeExplore: "Escalas y arpegios",
+    exploreType: "Tipo",
+    exploreTypeArpeggio: "Arpegio",
+    exploreTypeScale: "Escala",
+    scaleLabel: "Escala",
+    tensionsHintExplore: "Tensiones a incluir en el arpegio:",
+    exploreFootnote:
+      "Círculo oscuro = fundamental · círculo gris = resto de las notas de la escala/arpegio activo, en todo el mástil (trastes 0-12).",
     pattern: {
       adjacent: "adyacente",
       skip: (n) => `salta ${n} cuerda${n > 1 ? "s" : ""}`,
@@ -63,6 +72,15 @@ export const STRINGS = {
     tensions: "tensions",
     footnote:
       "Dark circle = active chord tone/tension · gold circle = your pinned melody note · gray circle = note outside the catalog but present because you pinned it. The engine tries every reasonable 3-4 string group (adjacent and skipped, drop 2/drop 3 style) with the melody on the group's highest string, and ranks by smaller fret span, then more active tensions present (★ = required), then more distinct tones covered.",
+    modeVoicings: "Voicings",
+    modeExplore: "Scales & arpeggios",
+    exploreType: "Type",
+    exploreTypeArpeggio: "Arpeggio",
+    exploreTypeScale: "Scale",
+    scaleLabel: "Scale",
+    tensionsHintExplore: "Tensions to include in the arpeggio:",
+    exploreFootnote:
+      "Dark circle = root · gray circle = the rest of the active scale/arpeggio notes, across the whole neck (frets 0-12).",
     pattern: {
       adjacent: "adjacent",
       skip: (n) => `skips ${n} string${n > 1 ? "s" : ""}`,
